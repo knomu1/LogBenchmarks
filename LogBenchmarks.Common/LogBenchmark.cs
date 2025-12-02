@@ -39,4 +39,18 @@ public class LogBenchmark
 
         Console.WriteLine($"{name,-12}: {iterations,8} logs  =>  {sw.ElapsedMilliseconds,6} ms");
     }
+    public void Run(int count)
+    {
+        var logger = _logger;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        for (int i = 0; i < count; i++)
+        {
+            logger.LogInformation("Test log {Iteration}", i);
+        }
+
+        sw.Stop();
+        Console.WriteLine($"[{logger.GetType().Name}] {count} logs: {sw.ElapsedMilliseconds} ms");
+    }
+
 }
