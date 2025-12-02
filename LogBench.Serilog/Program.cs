@@ -6,19 +6,21 @@ using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Serilog Ç Host Ç…ìùçá
-builder.Logging.ClearProviders();
-
-var logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.File("logs/serilog.log")
+// Console èoóÕÇÕíxÇ¢ÇÃÇ≈ Warning à»è„Ç…Ç∑ÇÈ
+var serilogLogger = new LoggerConfiguration()
+    .MinimumLevel.Warning()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+    )
     .CreateLogger();
 
-builder.Logging.AddSerilog(logger, dispose: true);
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(serilogLogger, dispose: true);
 
 builder.Services.AddSingleton<LogBenchmark>();
 
 var app = builder.Build();
-app.Services.GetRequiredService<LogBenchmark>().Run(5000);
+
+app.Services.GetRequiredService<LogBenchmark>().RunBenchmark();
+
 app.Run();

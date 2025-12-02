@@ -4,29 +4,31 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ZLogger;
 using ZLogger.Providers;
+using System.IO;
 
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Logging.ClearProviders();
 
-builder.Logging
-    .SetMinimumLevel(LogLevel.Information)
-    .AddZLoggerConsole()
-    .AddZLoggerRollingFile(options =>
-    {
-        // ローテーションごとにファイルパスを決める
-        options.FilePathSelector = (timestamp, sequenceNumber)
-            => $"logs/{timestamp.ToLocalTime():yyyy-MM-dd}_{sequenceNumber:000}.log";
+// ログフォルダ
+var logDir = Path.Combine("logs", "zlogger");
+Directory.CreateDirectory(logDir);
 
-        // 日毎にローテーション
-        options.RollingInterval = RollingInterval.Day;
+// ZLogger rolling file (あなたのバリアントに完全対応)
+builder.Logging.AddZLoggerRollingFile(options =>
+{
+    // FilePathSelector を使用
+    options.FilePathSelector = (dt, seq) =>
+        Path.Combine(logDir, $"zlogger-{dt:yyyyMMdd}-{seq}.log");
 
-        // サイズでも切りたい場合は KB 指定（不要ならコメントアウトでもOK）
-        // options.RollingSizeKB = 1024;
-    });
+    options.RollingInterval = RollingInterval.Day;
+    options.RollingSizeKB = 1024;
+});
 
 builder.Services.AddSingleton<LogBenchmark>();
 
 var app = builder.Build();
-app.Services.GetRequiredService<LogBenchmark>().Run(5000);
+
+app.Services.GetRequiredService<LogBenchmark>().RunBenchmark();
+
 app.Run();
