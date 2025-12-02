@@ -1,14 +1,24 @@
+using LogBenchmarks.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using LogBenchmarks.Common;
+using Serilog;
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(s =>
-    {
-        s.AddLogging(b => b.SetMinimumLevel(LogLevel.Information));
-        s.AddSingleton<LogBenchmark>();
-    }).Build();
+var builder = Host.CreateApplicationBuilder(args);
 
-var bench = host.Services.GetRequiredService<LogBenchmark>();
-bench.Run(5000);
+// Serilog Ç Host Ç…ìùçá
+builder.Logging.ClearProviders();
+
+var logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/serilog.log")
+    .CreateLogger();
+
+builder.Logging.AddSerilog(logger, dispose: true);
+
+builder.Services.AddSingleton<LogBenchmark>();
+
+var app = builder.Build();
+app.Services.GetRequiredService<LogBenchmark>().Run(5000);
+app.Run();
